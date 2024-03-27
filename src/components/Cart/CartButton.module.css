@@ -1,0 +1,16 @@
+.button {
+  background-color: #1ac5d1;
+  border-color: #1ac5d1;
+  color: white;
+}
+
+.button span {
+  margin: 0 0.5rem;
+}
+
+.badge {
+  background-color: #37d7e2;
+  border-radius: 30px;
+  padding: 0.15rem 1.25rem;
+  color: white;
+}
