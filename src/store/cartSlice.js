@@ -1,5 +1,69 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
+import { createAsyncThunk } from '@reduxjs/toolkit'
 import { uiActions } from './uiSlice'
+
+const initialState = {
+  status: 'idle',
+  items: [],
+  totalQuantity: 0,
+}
+
+const cartSlice = createSlice({
+  name: 'cart',
+  initialState,
+  reducers: {
+    addItemToCart(state, action) {
+      const newItem = action.payload
+      const existingItem = state.items.find((item) => item.id === newItem.id)
+
+      state.totalQuantity++
+
+      if (!existingItem) {
+        // it's allowed to mutate state here using redux-toolkit (it has the build-in immer tool here)
+        state.items.push({
+          id: newItem.id,
+          title: newItem.title,
+          price: newItem.price,
+          quantity: 1,
+          totalPrice: newItem.price,
+        })
+      } else {
+        existingItem.quantity++
+        existingItem.totalPrice = existingItem.totalPrice + newItem.price
+      }
+    },
+    removeItemFromCart(state, action) {
+      const id = action.payload
+
+      const existingItem = state.items.find((item) => item.id === id)
+
+      state.totalQuantity--
+
+      if (existingItem.quantity === 1) {
+        state.items = state.items.filter((item) => item.id !== id)
+      } else {
+        existingItem.quantity--
+        existingItem.totalPrice = existingItem.totalPrice - existingItem.price
+      }
+    },
+  },
+  // hanlde async logic
+  extraReducers: (builder) => {
+    builder
+      .addCase(sendCartData.pending, (state, action) => {
+        state.status = 'pending'
+      })
+      .addCase(sendCartData.fulfilled, (state, action) => {
+        state.status = 'success'
+      })
+      .addCase(fetchCartData.fulfilled, (state, action) => {
+        if (action.payload?.items) {
+          state.items = action.payload.items
+          state.totalQuantity = action.payload.totalQuantity
+        }
+      })
+  },
+})
 
 export const sendCartData = createAsyncThunk(
   'cart/send',
@@ -71,13 +135,7 @@ export const fetchCartData = createAsyncThunk(
     }
 
     try {
-      const cartData = await fetchData()
-      dispatch(
-        cartActions.replaceCart({
-          items: cartData.items || [],
-          totalQuantity: cartData.totalQuantity,
-        }),
-      )
+      return fetchData()
     } catch (error) {
       dispatch(
         uiActions.showNotification({
@@ -93,58 +151,6 @@ export const fetchCartData = createAsyncThunk(
     }, 2000)
   },
 )
-
-const initialState = {
-  items: [],
-  totalQuantity: 0,
-}
-
-const cartSlice = createSlice({
-  name: 'cart',
-  initialState,
-  reducers: {
-    addItemToCart(state, action) {
-      const newItem = action.payload
-      const existingItem = state.items.find((item) => item.id === newItem.id)
-
-      state.totalQuantity++
-
-      if (!existingItem) {
-        // it's allowed to mutate state here using redux-toolkit (it has the build-in immer tool here)
-        state.items.push({
-          id: newItem.id,
-          title: newItem.title,
-          price: newItem.price,
-          quantity: 1,
-          totalPrice: newItem.price,
-        })
-      } else {
-        existingItem.quantity++
-        existingItem.totalPrice = existingItem.totalPrice + newItem.price
-      }
-    },
-    removeItemFromCart(state, action) {
-      const id = action.payload
-
-      const existingItem = state.items.find((item) => item.id === id)
-
-      state.totalQuantity--
-
-      if (existingItem.quantity === 1) {
-        state.items = state.items.filter((item) => item.id !== id)
-      } else {
-        existingItem.quantity--
-        existingItem.totalPrice = existingItem.totalPrice - existingItem.price
-      }
-    },
-  },
-  // hanlde async logic
-  extraReducers: (builder) => {
-    builder.addCase(fetchCartData.fulfilled, (state, action) => {
-      // 
-    })
-  },
-})
 
 export const cartActions = cartSlice.actions
 

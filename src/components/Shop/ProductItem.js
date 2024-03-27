@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux'
+import {  useDispatch } from 'react-redux'
 import { cartActions } from '../../store/cartSlice'
 import Card from '../Utils/Card'
 import classes from './ProductItem.module.css'
